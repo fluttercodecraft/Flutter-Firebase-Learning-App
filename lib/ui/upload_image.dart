@@ -1,11 +1,11 @@
 import 'dart:io';
+
 import 'package:app/utils/utils.dart';
 import 'package:app/widgets/round_button.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:image_picker/image_picker.dart' show ImagePicker;
+import 'package:image_picker/image_picker.dart';
 
 class UploadImageScreen extends StatefulWidget {
   const UploadImageScreen({Key? key}) : super(key: key);
@@ -16,100 +16,141 @@ class UploadImageScreen extends StatefulWidget {
 
 class _UploadImageScreenState extends State<UploadImageScreen> {
   bool loading = false;
+
   File? _image;
-  final picker = ImagePicker();
 
-  firebase_storage.FirebaseStorage storage =
+  final ImagePicker picker = ImagePicker();
+
+  final firebase_storage.FirebaseStorage storage =
       firebase_storage.FirebaseStorage.instance;
-  var databaseRef = FirebaseDatabase.instance.ref('Post');
 
-  Future getImageGallery(dynamic ImageSource) async {
+  final DatabaseReference databaseRef =
+  FirebaseDatabase.instance.ref('Post');
+
+  // Pick image from gallery
+  Future<void> getImageGallery() async {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
     );
-    setState(() {
-      if (pickedFile != null) {
+
+    if (pickedFile != null) {
+      setState(() {
         _image = File(pickedFile.path);
-      } else {
-        print('no image picked');
-      }
+      });
+    } else {
+      print('No image picked');
+    }
+  }
+
+  // Upload image
+  Future<void> uploadImage() async {
+    // Check image
+    if (_image == null) {
+      Utils().toastMessage('Please select an image');
+      return;
+    }
+
+    setState(() {
+      loading = true;
     });
+
+    try {
+      // Create Firebase Storage reference
+      final firebase_storage.Reference ref = firebase_storage
+          .FirebaseStorage.instance
+          .ref()
+          .child('asiftaj')
+          .child(
+        DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+
+      // Upload image
+      final firebase_storage.UploadTask uploadTask =
+      ref.putFile(_image!);
+
+      // Wait for upload
+      await uploadTask;
+
+      // Get image URL
+      final String newUrl = await ref.getDownloadURL();
+
+      // Save URL to Realtime Database
+      await databaseRef.child('1').set({
+        'id': '1212',
+        'title': newUrl,
+      });
+
+      Utils().toastMessage('Image uploaded successfully');
+
+      setState(() {
+        loading = false;
+      });
+    } catch (error) {
+      Utils().toastMessage(error.toString());
+
+      setState(() {
+        loading = false;
+      });
+
+      print(error.toString());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Upload Image')),
+      appBar: AppBar(
+        title: const Text('Upload Image'),
+      ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Image picker
             Center(
               child: InkWell(
-                onTap: () {
-                  getImageGallery();
-                },
+                onTap: getImageGallery,
+                borderRadius: BorderRadius.circular(10),
                 child: Container(
                   height: 200,
                   width: 200,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: _image != null
-                      ? Image.file(_image!.absolute)
-                      : Center(child: Icon(Icons.image)),
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      _image!,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                      : const Center(
+                    child: Icon(
+                      Icons.image,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
               ),
             ),
-            SizedBox(height: 39),
+
+            const SizedBox(height: 39),
+
+            // Upload button
             RoundButton(
               title: 'Upload',
               loading: loading,
-              onTap: () async {
-                setState(() {
-                  loading = true;
-                });
-                firebase_storage.Reference ref = firebase_storage
-                    .FirebaseStorage
-                    .instance
-                    .ref(
-                      '/asiftaj/' +
-                          DateTime.now().millisecondsSinceEpoch.toString(),
-                    );
-                firebase_storage.UploadTask uploadTask = ref.putFile(
-                  _image!.absolute,
-                );
-
-                Future.value(uploadTask)
-                    .then((value) async {
-                      var newUrl = await ref.getDownloadURL();
-
-                      databaseRef
-                          .child('1')
-                          .set({'id': '1212', 'title': newUrl.toString()})
-                          .then((value) {
-                            setState(() {
-                              loading = false;
-                            });
-                            Utils().toastMessage('uploaded');
-                          })
-                          .onError((error, stackTrace) {
-                            print(error.toString());
-                            setState(() {
-                              loading = false;
-                            });
-                          });
-                    })
-                    .onError((error, stackTrace) {
-                      Utils().toastMessage(error.toString());
-                      setState(() {
-                        loading = false;
-                      });
-                    });
-              },
+              onTap: uploadImage,
             ),
           ],
         ),
