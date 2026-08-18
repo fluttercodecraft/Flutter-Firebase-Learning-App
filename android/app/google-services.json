@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "36071934081",
+    "project_id": "dummy-a787b",
+    "storage_bucket": "dummy-a787b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36071934081:android:7400eefa51d8bea3066580",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcGnus5wSlVKmDlhdG0Q74PrQboeYuDB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
