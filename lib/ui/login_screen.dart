@@ -1,8 +1,8 @@
-import 'package:app/ui/auth/phone_auth/login_with_phone_number.dart';
-import 'package:app/ui/auth/signup_screen.dart';
 import 'package:app/ui/fogot_password.dart';
+import 'package:app/ui/login_with_phone_number.dart';
+import 'package:app/ui/post_screen.dart';
+import 'package:app/ui/signup_screen.dart';
 import 'package:app/widgets/round_button.dart';
-import 'package:app/ui/firebase_database/post_screen.dart';
 import 'package:app/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

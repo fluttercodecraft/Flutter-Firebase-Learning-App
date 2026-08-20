@@ -1,5 +1,5 @@
-import 'package:app/ui/auth/login_screen.dart';
-import 'package:app/ui/firebase_database/add_posts.dart';
+import 'package:app/ui/add_posts.dart';
+import 'package:app/ui/login_screen.dart';
 import 'package:app/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';

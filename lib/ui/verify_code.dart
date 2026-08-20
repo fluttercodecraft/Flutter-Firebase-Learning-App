@@ -1,4 +1,5 @@
-import 'package:app/ui/firebase_database/post_screen.dart';
+
+import 'package:app/ui/post_screen.dart';
 import 'package:app/utils/utils.dart';
 import 'package:app/widgets/round_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';

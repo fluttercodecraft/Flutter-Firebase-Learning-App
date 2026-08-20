@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:app/ui/auth/login_screen.dart';
-import 'package:app/ui/firebase_firestore/fire_store_list.dart';
+import 'package:app/ui/fire_store_list.dart';
+import 'package:app/ui/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
