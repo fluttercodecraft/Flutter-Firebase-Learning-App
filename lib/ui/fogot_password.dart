@@ -3,46 +3,66 @@ import 'package:app/widgets/round_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailController = TextEditingController();
+  final _auth = FirebaseAuth.instance;
+  bool _isLoading = false;
 
-  final emailController =TextEditingController();
-  final auth = FirebaseAuth.instance ;
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      Utils().toastMessage('Please enter an email address');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      Utils().toastMessage('Password reset email sent. Please check your inbox.');
+    } catch (error) {
+      Utils().toastMessage(error.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Forgot Password'),
-      ),
+      appBar: AppBar(title: const Text('Forgot Password')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-
             TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(
-                  hintText: 'Email'
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                hintText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-            SizedBox(height: 40,),
-            RoundButton(title: 'Forgot', onTap: (){
-              auth.sendPasswordResetEmail(email: emailController.text.toString()).then((value){
-                Utils().toastMessage('We have sent you email to recover password, please check email');
-              }).onError((error, stackTrace){
-                Utils().toastMessage(error.toString());
-              });
-            })
+            const SizedBox(height: 40),
+            RoundButton(
+              title: 'Reset Password',
+              loading: _isLoading,
+              onTap: _resetPassword,
+            ),
           ],
         ),
       ),

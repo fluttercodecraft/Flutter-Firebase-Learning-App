@@ -1,156 +1,98 @@
 import 'dart:io';
-
 import 'package:app/utils/utils.dart';
 import 'package:app/widgets/round_button.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class UploadImageScreen extends StatefulWidget {
-  const UploadImageScreen({Key? key}) : super(key: key);
+  const UploadImageScreen({super.key});
 
   @override
   State<UploadImageScreen> createState() => _UploadImageScreenState();
 }
 
 class _UploadImageScreenState extends State<UploadImageScreen> {
-  bool loading = false;
-
   File? _image;
+  bool _loading = false;
 
-  final ImagePicker picker = ImagePicker();
+  final _picker = ImagePicker();
+  final _databaseRef = FirebaseDatabase.instance.ref('Post');
 
-  final firebase_storage.FirebaseStorage storage =
-      firebase_storage.FirebaseStorage.instance;
-
-  final DatabaseReference databaseRef =
-  FirebaseDatabase.instance.ref('Post');
-
-  // Pick image from gallery
-  Future<void> getImageGallery() async {
-    final pickedFile = await picker.pickImage(
+  Future<void> _getImageGallery() async {
+    final pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
     );
 
     if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    } else {
-      print('No image picked');
+      setState(() => _image = File(pickedFile.path));
     }
   }
 
-  // Upload image
-  Future<void> uploadImage() async {
-    // Check image
+  Future<void> _uploadImage() async {
     if (_image == null) {
       Utils().toastMessage('Please select an image');
       return;
     }
 
-    setState(() {
-      loading = true;
-    });
+    setState(() => _loading = true);
 
     try {
-      // Create Firebase Storage reference
-      final firebase_storage.Reference ref = firebase_storage
-          .FirebaseStorage.instance
-          .ref()
-          .child('asiftaj')
-          .child(
-        DateTime.now().millisecondsSinceEpoch.toString(),
-      );
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref('/posts/${DateTime.now().millisecondsSinceEpoch}');
 
-      // Upload image
-      final firebase_storage.UploadTask uploadTask =
-      ref.putFile(_image!);
+      await ref.putFile(_image!);
+      final newUrl = await ref.getDownloadURL();
 
-      // Wait for upload
-      await uploadTask;
-
-      // Get image URL
-      final String newUrl = await ref.getDownloadURL();
-
-      // Save URL to Realtime Database
-      await databaseRef.child('1').set({
-        'id': '1212',
+      final id = DateTime.now().millisecondsSinceEpoch.toString();
+      await _databaseRef.child(id).set({
+        'id': id,
         'title': newUrl,
       });
 
       Utils().toastMessage('Image uploaded successfully');
-
-      setState(() {
-        loading = false;
-      });
+      setState(() => _image = null);
     } catch (error) {
       Utils().toastMessage(error.toString());
-
-      setState(() {
-        loading = false;
-      });
-
-      print(error.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Image'),
-      ),
-
+      appBar: AppBar(title: const Text('Upload Image')),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image picker
-            Center(
-              child: InkWell(
-                onTap: getImageGallery,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  height: 200,
-                  width: 200,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: _image != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(
-                      _image!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                      : const Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
-                  ),
+            InkWell(
+              onTap: _getImageGallery,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 200,
+                width: 200,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: _image != null
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.file(_image!, fit: BoxFit.cover),
+                )
+                    : const Icon(Icons.image, size: 50, color: Colors.grey),
               ),
             ),
-
-            const SizedBox(height: 39),
-
-            // Upload button
+            const SizedBox(height: 40),
             RoundButton(
               title: 'Upload',
-              loading: loading,
-              onTap: uploadImage,
+              loading: _loading,
+              onTap: _uploadImage,
             ),
           ],
         ),

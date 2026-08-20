@@ -1,27 +1,26 @@
 import 'dart:async';
+import 'package:app/ui/auth/login_screen.dart';
+import 'package:app/ui/firebase_firestore/fire_store_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../ui/auth/login_screen.dart' show LoginScreen;
-import '../ui/firebase_database/post_screen.dart';
-import '../ui/firebase_firestore/fire_store_list.dart';
-class SplashServices{
 
-  void isLogin(BuildContext context){
-
+class SplashServices {
+  void isLogin(BuildContext context) {
     final auth = FirebaseAuth.instance;
+    final user = auth.currentUser;
 
-    final user =  auth.currentUser ;
+    Timer(const Duration(seconds: 3), () {
+      if (!context.mounted) return;
 
-    if(user != null){
-      Timer(const Duration(seconds: 3),
-              ()=> Navigator.push(context, MaterialPageRoute(builder: (context) => ShowFireStorePostScreen()))
+      final targetScreen = user != null
+          ? const ShowFireStorePostScreen()
+          : const LoginScreen();
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => targetScreen),
+            (route) => false,
       );
-    }else {
-      Timer(const Duration(seconds: 3),
-              ()=> Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()))
-      );
-    }
-
-
+    });
   }
 }

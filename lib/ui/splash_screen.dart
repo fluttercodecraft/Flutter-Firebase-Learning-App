@@ -1,29 +1,30 @@
 import 'package:app/firebase_services/splash_services.dart';
 import 'package:flutter/material.dart';
 
-
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
-  SplashServices splashScreen = SplashServices();
+  final _splashService = SplashServices();
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    splashScreen.isLogin(context);
+    _splashService.isLogin(context);
   }
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: Text('Firebase Tutorials' , style: TextStyle(fontSize: 30),),
+        child: Text(
+          'Firebase Tutorials',
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
